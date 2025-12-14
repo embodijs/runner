@@ -1,18 +1,9 @@
-use rocket::serde::{Deserialize, Serialize, json::Json};
+use rocket::serde::{Deserialize, json::Json};
 
 #[macro_use]
 extern crate rocket;
 
-#[derive(Debug, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct Health {
-    healthy: bool,
-}
-
-#[get("/health")]
-fn health() -> Json<Health> {
-    Json(Health { healthy: true })
-}
+mod routes;
 
 #[derive(Debug, Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -38,5 +29,8 @@ fn create_validation_runner(repo: Json<Repo<'_>>) -> std::io::Result<()> {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![create_validation_runner, health])
+    rocket::build().mount(
+        "/",
+        routes![create_validation_runner, routes::health::health],
+    )
 }
