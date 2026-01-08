@@ -5,4 +5,7 @@ edition = "2024"
 
 [dependencies]
 rocket = { version = "0.5.1", features = ["json"] }
-podman-rest-client = "0.13.0"
+podman-api = "0.10"
+futures-util = "0.3"
+dotenvy = "0.15"
+uuid = { version = "1", features = ["v4"] }
