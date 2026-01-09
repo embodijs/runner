@@ -1,7 +1,6 @@
-use crate::podman::Podman;
+use crate::podman::{Podman, RunOpts};
 use futures_util::StreamExt;
 use podman_api::conn::TtyChunk;
-use podman_api::opts::ContainerCreateOpts;
 use rocket::http::Status;
 use rocket::response::status::{Custom, NotFound};
 use rocket::response::stream::{Event, EventStream};
@@ -46,19 +45,18 @@ async fn create_validation_runner(
     podman: &State<Podman>,
     data: Json<RegisterRequestData<'_>>,
 ) -> Result<Json<RegisterResponse>, Custom<String>> {
-    let image = format!("embodi-runner:{}", data.version);
+    let image = format!("alpine:{}", data.version);
     let key = Uuid::new_v4().to_string();
-    let opts = ContainerCreateOpts::builder()
-        .image(image)
-        .remove(true)
-        .env([
-            ("PLATFORM", format!("{:?}", data.repo.platform)),
-            ("OWNER", data.repo.owner.to_string()),
-            ("NAME", data.repo.name.to_string()),
-            ("TOKEN", data.repo.token.to_string()),
-            ("PREFIX", format!("[{}]", key)),
-        ])
-        .build();
+    let platform = format!("{:?}", data.repo.platform);
+    let prefix = format!("[{}]", key);
+    let env = [
+        ("PLATFORM", platform.as_str()),
+        ("OWNER", data.repo.owner),
+        ("NAME", data.repo.name),
+        ("TOKEN", data.repo.token),
+        ("PREFIX", prefix.as_str()),
+    ];
+    let opts = RunOpts::new(&image, Some(&env), Some(false));
 
     let container = podman
         .run(&opts)
